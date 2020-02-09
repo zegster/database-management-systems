@@ -21,7 +21,7 @@ if(isset($_POST["login"]))
 
         $username = $_POST["username"];
         $password = $_POST["password"];
-        $result = mysqli_query($con, "SELECT * FROM mysql.user where user='$username' AND PASSWORD='$password'");
+        $result = mysqli_query($con, "SELECT * FROM mysql.user where user=\"$username\" AND PASSWORD=\"$password\"");
 
         /* Check to see if login was success */
         if(mysqli_num_rows($result) > 0)
@@ -30,8 +30,8 @@ if(isset($_POST["login"]))
         }
         else
         {
-            $_SESSION['database_message'] = "Failed to sign in! Please try again...";
-            $_SESSION['database_message_type'] = "negative";
+            $_SESSION["database_message"] = "Failed to sign in! Please try again...";
+            $_SESSION["database_message_type"] = "negative";
         }
 
         /* If user already signed in, redirect to a specific page */
@@ -124,10 +124,13 @@ if(isset($_POST["login"]))
                                 </div>
 
                                 <!-- Database Message -->
-                                <?php if(isset($_SESSION['database_message'])): ?>
-                                <div class="ui <?php echo $_SESSION['database_message_type']; ?> no-margin message">
+                                <?php if(isset($_SESSION["database_message"])): ?>
+                                <div class="ui <?php echo $_SESSION["database_message_type"]; ?> no-margin message">
                                     <i class="close icon"></i>
-                                    <p><?php echo $_SESSION['database_message']; ?></p>
+                                    <div class="header">
+				                        <?php echo ucwords($_SESSION["database_message_type"]); ?>
+			                        </div>
+                                    <p><?php echo $_SESSION["database_message"]; ?></p>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -142,13 +145,11 @@ if(isset($_POST["login"]))
                 </div>
             </div>
         </div>
-
-        
     </body>
 </html>
 
 <?php
 /* Remove specific session */
-unset($_SESSION['database_message']);
-unset($_SESSION['database_message_type']);
+unset($_SESSION["database_message"]);
+unset($_SESSION["database_message_type"]);
 ?>
