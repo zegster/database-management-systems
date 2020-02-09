@@ -3,6 +3,44 @@
 /* Start Session */
 session_start();
 
+
+/* If user already signed in, redirect to a specific page */
+if(isset($_SESSION["user_id"]))
+{
+    header("Location: ./admin.php");
+}
+
+
+/* Processing Login Information */
+if(isset($_POST["login"]))
+{
+    if(isset($_POST["username"]) && isset($_POST["password"]))
+    {
+        /* Database connection */
+        $con = (require_once "./connection.php");
+
+        $username = $_POST["username"];
+        $password = $_POST["password"];
+        $result = mysqli_query($con, "SELECT * FROM mysql.user where user='$username' AND PASSWORD='$password'");
+
+        /* Check to see if login was success */
+        if(mysqli_num_rows($result) > 0)
+        {
+            $_SESSION["user_id"] = $username;
+        }
+        else
+        {
+            $_SESSION['database_message'] = "Failed to sign in! Please try again...";
+            $_SESSION['database_message_type'] = "negative";
+        }
+
+        /* If user already signed in, redirect to a specific page */
+        if(isset($_SESSION["user_id"]))
+        {
+            header("Location: ./admin.php");
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -54,6 +92,7 @@ session_start();
 			<div class="ui text loader"><i class="fa fa-exclamation-triangle"></i>&emsp;Error: Please enable JavaScript...</div>
 		</div>
 
+        <!-- Login Form -->
         <div class="ui container">
             <div class="ui centered grid">
                 <div class="column">
@@ -63,12 +102,12 @@ session_start();
                         </div>
                     </div>
 
-                    <form action="./admin.php" method="POST">
+                    <form action="./login.php" method="POST">
                         <div class="ui form">
                             <div class="ui segment">
                                 <div class="field">
                                     <div class="ui left icon input">
-                                        <input type="text" name="user" placeholder="User">
+                                        <input type="text" name="username" placeholder="User">
                                         <i class="user icon"></i>
                                     </div>
                                 </div>
@@ -79,13 +118,27 @@ session_start();
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <button class="fluid ui blue button">
+                                    <button class="fluid ui blue button" type="submit" name="login">
                                         <i class="fa fa-sign-in"></i>&emsp;Sign In
                                     </button>
                                 </div>
+
+                                <!-- Database Message -->
+                                <?php if(isset($_SESSION['database_message'])): ?>
+                                <div class="ui <?php echo $_SESSION['database_message_type']; ?> no-margin message">
+                                    <i class="close icon"></i>
+                                    <p><?php echo $_SESSION['database_message']; ?></p>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </form>
+
+                    <div class="ui info message">
+                        <div class="ui center aligned tiny header">
+                            Go back to <a href="../index.php">Main Page</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -93,3 +146,9 @@ session_start();
         
     </body>
 </html>
+
+<?php
+/* Remove specific session */
+unset($_SESSION['database_message']);
+unset($_SESSION['database_message_type']);
+?>

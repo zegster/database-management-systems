@@ -5,7 +5,7 @@ session_start();
 
 
 /* Database connection */
-$con = (require_once './php/connection.php');
+$con = (require_once "./php/connection.php");
 
 
 /* Menu Number and Column Number */
@@ -19,8 +19,8 @@ $cn = intval(filter_input(INPUT_GET, "cn"));
 $table = mysqli_query($con, "SHOW TABLES ");
 while($result = mysqli_fetch_array($table))
 {
-    $tableArray[] = $result['0'];
-    $headerArray[] = ucwords(str_replace("_", " ", $result['0']));
+    $tableArray[] = $result["0"];
+    $headerArray[] = ucwords(str_replace("_", " ", $result["0"]));
 }
 rsort($tableArray);
 rsort($headerArray);
@@ -32,23 +32,23 @@ $table_name = $tableArray[$mn];
 $column = mysqli_query($con, "SHOW COLUMNS FROM $table_name");
 while($result = mysqli_fetch_array($column))
 {
-	$displayFields[] = ucwords(str_replace("_", " ", $result['0']));
-	$fields[] = $result['0'];
+	$displayFields[] = ucwords(str_replace("_", " ", $result["0"]));
+	$fields[] = $result["0"];
 }
 
 
 /* Sorting based on the selected column and by keyword search (if any)
  * NOTE: For descending order, use the keyword DESC. */
 $isSearchMode = false;
-if(isset($_POST['keyword_search']))
+if(isset($_POST["keyword_search"]))
 {
 	$isSearchMode = true;
 	$data2dArr = array();
 	$toSearch = str_replace(" ", "|", filter_input(INPUT_POST, "keyword_search"));
-	$toSearch = ' REGEXP "' . $toSearch . '"';
+	$toSearch = " REGEXP \"" . $toSearch . "\"";
 	
-	$searchQuery = implode($toSearch . ' OR ', $fields) . $toSearch;
-	if(isset($_GET['desc']))
+	$searchQuery = implode($toSearch . " OR ", $fields) . $toSearch;
+	if(isset($_GET["desc"]))
 	{
 		$sortedResult = mysqli_query($con, "SELECT * FROM $table_name WHERE $searchQuery ORDER BY $fields[$cn] DESC");
 	}
@@ -60,7 +60,7 @@ if(isset($_POST['keyword_search']))
 else
 {
 	$data2dArr = array();
-	if(isset($_GET['desc']))
+	if(isset($_GET["desc"]))
 	{
 		$sortedResult = mysqli_query($con, "SELECT * FROM $table_name ORDER BY $fields[$cn] DESC");
 	}
@@ -90,7 +90,6 @@ else
     $isDataEmpty = true;
 }
 ?>
-
 
 <!DOCTYPE html>
 <html>
@@ -128,45 +127,45 @@ else
 		</div>
 
 		<!-- Database Message -->
-		<?php if(isset($_SESSION['database_message'])): ?>
-		<div class="ui <?php echo $_SESSION['database_message_type']; ?> no-margin message">
+		<?php if(isset($_SESSION["database_message"])): ?>
+		<div class="ui <?php echo $_SESSION["database_message_type"]; ?> no-margin message">
 			<i class="close icon"></i>
 			<div class="header">
-				<?php echo ucwords($_SESSION['database_message_type']); ?>
+				<?php echo ucwords($_SESSION["database_message_type"]); ?>
 			</div>
-			<p><?php echo $_SESSION['database_message']; ?></p>
+			<p><?php echo $_SESSION["database_message"]; ?></p>
 		</div>
 		<?php endif; ?>
 	
 		<!-- Navigation Menu -->
 		<div class="ui container">
-                <div class="ui borderless stackable no-bottom-border-radius no-margin inverted menu">
-                	<!-- Keyword Search -->
+			<div class="ui borderless stackable no-bottom-border-radius no-margin inverted menu">
+				<!-- Keyword Search -->
+				<div class="item">
+					<form class="max-width" action="index.php?mn=<?php echo $mn?>&cn=<?php echo $cn?>" method="POST">
+						<div class="ui action max-width input">
+							<input class="search-bar" type="text" name="keyword_search" placeholder="Search by keyword...">
+							<button class="ui teal icon button" type="submit">
+								<i class="fa fa-search"></i>
+							</button>
+						</div>
+					</form>	
+				</div>
+				
+				<!-- Refresh/Admin Button -->
+				<div class="right menu">
 					<div class="item">
-						<form class="max-width" action="index.php?mn=<?php echo $mn?>&cn=<?php echo $cn?>" method="POST">
-							<div class="ui action max-width input">
-								<input class="search-bar" type="text" name="keyword_search" placeholder="Search by keyword...">
-								<button class="ui teal icon button" type="submit">
-									<i class="fa fa-search"></i>
-								</button>
-							</div>
-						</form>	
+						<div class="ui buttons">
+							<button class="ui teal button" onclick="window.location.href = 'index.php?mn=<?php echo $mn?>&cn=<?php echo $cn?>'">
+								<i class="fa fa-refresh"></i>&emsp;Refresh
+							</button>
+							<button class="ui teal button" onclick="window.location.href = './php/admin.php'">
+								<i class="fa fa-user"></i>&emsp;Admin
+							</button>
+						</div>
 					</div>
-					
-					<!-- Refresh/Admin Button -->
-            		<div class="right menu">
-                    	<div class="item">
-							<div class="ui buttons">
-								<button class="ui teal button" onclick="window.location.href = 'index.php?mn=<?php echo $mn?>&cn=<?php echo $cn?>'">
-									<i class="fa fa-refresh"></i>&emsp;Refresh
-								</button>
-								<button class="ui teal button" onclick="window.location.href = './php/admin.php'">
-									<i class="fa fa-user"></i>&emsp;Admin
-								</button>
-							</div>
-                    	</div>
-                    </div>	
-            	</div>
+				</div>	
+			</div>
         	
 			
 			<!-- Table Menu -->
@@ -228,7 +227,7 @@ else
                             	</td>
                             <?php endfor; ?>
                                 <td>
-                                	<?php if(isset($_SESSION['row-edit']) && $_SESSION['row-edit'] == $j):?>
+                                	<?php if(isset($_SESSION["row-edit"]) && $_SESSION["row-edit"] == $j):?>
                                 	<!-- Display Data: Editing notice -->
                                 	<div class="ui disabled compact inverted yellow button">
                                         <i class="fa fa-cogs"></i>&emsp;Editing...
@@ -241,7 +240,7 @@ else
 										</button>
 										<?php else: ?>
 										<div class="ui buttons">
-											<button class="ui compact green button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn; ?>&cn=<?php echo $cn?><?php if(isset($_GET['desc'])): echo "&desc"; endif; ?>&edit=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)); ?>&row-edit=<?php echo $j?>';">
+											<button class="ui compact green button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn; ?>&cn=<?php echo $cn?><?php if(isset($_GET['desc'])): echo '&desc'; endif; ?>&edit=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)); ?>&row-edit=<?php echo $j?>';">
 												<i class="fa fa-pencil-square-o"></i>
 											</button>
 											<button class="ui compact red button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn; ?>&cn=<?php echo $cn?>&delete=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)); ?>';">
@@ -285,23 +284,23 @@ else
 					<tbody>
 						<tr class="center aligned">
     					<?php
-    					if(isset($_SESSION['data_output'])):
-    					    $dataOutput = explode(",", $_SESSION['data_output']);
+    					if(isset($_SESSION["data_output"])):
+    					    $dataOutput = explode(",", $_SESSION["data_output"]);
     					endif;
 					
     					for($i = 0; $i < count($fields); $i++): ?>
     						<!-- Update/Create a row: Input field -->
                         	<td>
                         		<div class="ui mini input">
-                        			<input type="text" name="<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION['data_output'])): echo $dataOutput[$i]; endif; ?>" placeholder="<?php echo ucwords(str_replace("_", " ", $fields[$i])); ?>">
-                                    <input type="hidden" name="old_<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION['data_output'])): echo $dataOutput[$i]; endif; ?>">
+                        			<input type="text" name="<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>" placeholder="<?php echo ucwords(str_replace("_", " ", $fields[$i])); ?>">
+                                    <input type="hidden" name="old_<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>">
                     			</div>
                     		</td>
                         <?php endfor; ?>
                         	<!-- Update/Create a row: Submit Button for input field -->
                             <td>
                             	<div>
-                            	<?php if(isset($_SESSION['is_edit']) && $_SESSION['is_edit']): ?>
+                            	<?php if(isset($_SESSION["is_edit"]) && $_SESSION["is_edit"]): ?>
                                     <button class="ui compact blue button" type="submit" name="update">
                                     	<i class="fa fa-pencil-square-o"></i>&emsp;UPDATE
                                     </button>
@@ -324,9 +323,9 @@ else
 
 <?php
 /* Remove specific session */
-unset($_SESSION['database_message']);
-unset($_SESSION['database_message_type']);
-unset($_SESSION['is_edit']);
-unset($_SESSION['row-edit']);
-unset($_SESSION['data_output']);
+unset($_SESSION["database_message"]);
+unset($_SESSION["database_message_type"]);
+unset($_SESSION["is_edit"]);
+unset($_SESSION["row-edit"]);
+unset($_SESSION["data_output"]);
 ?>
