@@ -1,0 +1,10 @@
+# Ignore specific project misc files
+*/.settings
+*/.buildpath
+*/.project
+
+# Ignore specific project
+hello-world
+university-sort
+university-view
+project-1-backup.zip
