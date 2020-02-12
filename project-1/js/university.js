@@ -19,26 +19,27 @@ $(document).ready(function()
 		isFormEmpty = true;
 		$('#editor-form input[type="text"]').each(function()
 		{
-			if($(this).val() === "")
+			if($(this).val() !== "")
 			{
 				isFormEmpty = false;
+				return false;
 			}
 		});
 		
-		if(!isFormEmpty)
+		if(isFormEmpty)
 		{
 			$("#editor").hide(0);
 		}
 		else
 		{
-			$("#editor-toggle").hide(0);
+			$("#editor-toggler").hide(0);
 		}
 	});
 	
 	/* Show database editor when clicked */
-	$("#editor-toggle").click(function()
+	$("#editor-toggler-button").click(function()
 	{
-		$("#editor-toggle").hide(0);
+		$("#editor-toggler").hide(0);
 		$("#editor").show(500);
 	});
 });

@@ -3,13 +3,12 @@
 /* Start Session */
 session_start();
 
-
 /* Redirect back to login page if login information doesn't exist */ 
 if(!isset($_SESSION['user_id']))
 {
     header("Location: ./login.php?redirect");
+    exit();
 }
-
 
 /* Sign out admin mode */
 //Check to see if the sign out button has been pressed.
@@ -23,36 +22,171 @@ if(isset($_POST["sign_out"]))
     exit();
 }
 
-
 /* Database connection */
 $con = (require_once "./connection.php");
 
-
-/* Processing Table: ALTER */
-if(isset($_POST["invoke_alter"]))
+/* Get all table in the selected database */
+$tables = mysqli_query($con, "SHOW TABLES ");
+while($result = mysqli_fetch_array($tables))
 {
-    $selectedTable = filter_input(INPUT_POST, "database_table");//required
-    $columnName = filter_input(INPUT_POST, "column_name");//required
-    $columnType = filter_input(INPUT_POST, "column_type");//required
+    $tableArray[] = $result["0"];
+    $tablenameArray[] = ucwords(str_replace("_", " ", $result["0"]));
+}
+unset($result);
+
+/* Retrieve all the columns for all the table */
+for($i = 0; $i < count($tableArray); $i++)
+{
+    $columns = mysqli_query($con, "SHOW COLUMNS FROM " . $tableArray[$i]);
+    while($result = mysqli_fetch_array($columns))
+    {
+        $tableColumnArray[$i][] = $result["0"];
+        $columnArray[$tableArray[$i]][] = $result["0"];
+    }
+}
+unset($result);
+
+
+/* Processing Table: ALTER ADD */
+if(isset($_POST["invoke_alter_add"]))
+{
+    $selectedTable = strtolower(filter_input(INPUT_POST, "database_table"));//required
+    $columnName = strtolower(filter_input(INPUT_POST, "column_name"));//required
+    $columnType = strtolower(filter_input(INPUT_POST, "column_type"));//required
     $columnTypeLength = filter_input(INPUT_POST, "column_type_length");//required
-    $columnDefault = filter_input(INPUT_POST, "column_default");
-    $columnAsDefinedValue = filter_input(INPUT_POST, "column_as_defined_value");
-    $columnNull = filter_input(INPUT_POST, "column_null");
-    $columnAttributes = filter_input(INPUT_POST, "column_attributes");
+    $columnDefault = strtolower(filter_input(INPUT_POST, "column_default"));
+    $columnAsDefinedValue = strtolower(filter_input(INPUT_POST, "column_as_defined_value"));
+    $columnNull = strtolower(filter_input(INPUT_POST, "column_null"));
+    $columnAttributes = strtolower(filter_input(INPUT_POST, "column_attributes"));
 
-    // echo "tst: " . 
-    // $selectedTable . $columnName . $columnType . $columnTypeLength . 
-    // $columnDefault . $columnAsDefinedValue . $columnNull . $columnAttributes;
-
-    //TODO create a sql to create a table: ALTER TABLE `student` ADD `Test` INT(1) UNSIGNED NULL DEFAULT NULL
-    if(empty($selectedTable) || empty($columnName) || empty($columnType) || empty($columnTypeLength))
+    if(empty($selectedTable) || empty($columnName) || empty($columnType))
     {
         $_SESSION["database_message"] = "Required field can not be empty!";
-        $_SESSION["database_message_type"] = "negative";
+        $_SESSION["database_message_type"] = "error";
     }
     else
     {
+        /* Error Flag */
+        $isValidationError = false;
+        $query = "ALTER TABLE ";
 
+        /* Check to see if the input for the selected table is exist */
+        if(in_array($selectedTable, $tableArray)):
+            $query .= "" . $selectedTable . " ADD " . $columnName . " ";
+        else:
+            $_SESSION["database_message"] = "Selected table does not exist!";
+            $_SESSION["database_message_type"] = "error";
+            $isValidationError = true;
+        endif;
+
+        /* Check to see if the input for column type and length is valid */
+        if(in_array($columnType, array("int", "varchar", "text", "date"))):
+            if(in_array($columnType, array("text", "date"))):
+                $query .= strtoupper($columnType) . " ";
+            else:
+                if(!empty($columnTypeLength) && ctype_digit($columnTypeLength)):
+                    $query .= strtoupper($columnType) . "(" . $columnTypeLength . ") ";
+                else:
+                    $_SESSION["database_message"] = "Column length cannot be empty for this type and must be whole number!";
+                    $_SESSION["database_message_type"] = "error";
+                    $isValidationError = true;
+                endif;
+            endif;
+        else:
+            $_SESSION["database_message"] = "Selected column type does not exist!";
+            $_SESSION["database_message_type"] = "error";
+            $isValidationError = true;
+        endif;
+
+        /* Check to see if the input for attributes is not empty and is exist */
+        if(!empty($columnAttributes)):
+            if(in_array($columnAttributes, array("binary", "unsigned", "unsigned zerofill", "on update current_timestamp"))):
+                $query .=  strtoupper($columnAttributes) . " ";
+            else:
+                $_SESSION["database_message"] = "Selected column attributes does not exist!";
+                $_SESSION["database_message_type"] = "error";
+                $isValidationError = true;
+            endif;
+        endif;
+
+        /* Check to see if the input is null */
+        if(!empty($columnNull)):
+            $query .=  "NULL ";
+        else:
+            $query .=  "NOT NULL ";
+        endif;
+
+        /* Check to see if the input for default is not empty and is exist */
+        if(!empty($columnDefault)):
+            if(in_array($columnDefault, array("as defined", "curent_timestamp"))):
+                if(strcasecmp($columnDefault, "as defined") == 0):
+                    $query .= "DEFAULT \"" . $columnAsDefinedValue . "\" ";
+                else:
+                    $query .= "DEFAULT CURRENT_TIMESTAMP ";
+                endif;
+            else:
+                $_SESSION["database_message"] = "Selected column default does not exist!";
+                $_SESSION["database_message_type"] = "error";
+                $isValidationError = true;
+            endif;
+        endif;
+
+        /* Execute SQL query when there is no error */
+        if(!$isValidationError)
+        {
+            mysqli_query($con, $query) or die("Error on $selectedTable query: $query | " . mysqli_error($con));
+            $_SESSION["database_message"] = "A new column has been added!";
+            $_SESSION["database_message_type"] = "success";
+
+            header("Location: ./admin.php?redirect");
+            exit();
+        }
+    }
+}
+
+
+/* Processing Table: ALTER DROP */
+else if(isset($_POST["invoke_alter_drop"]))
+{
+    $selectedTable = strtolower(filter_input(INPUT_POST, "database_table"));//required
+    $selectedTableColumn = strtolower(filter_input(INPUT_POST, "database_table_column"));//required
+
+    if(empty($selectedTable) || empty($selectedTableColumn))
+    {
+        $_SESSION["database_message"] = "Required field can not be empty!";
+        $_SESSION["database_message_type"] = "error";
+    }
+    else
+    {
+        /* Error Flag */
+        $isValidationError = false;
+
+        /* Check to see if the input for the selected table is exist */
+        if(!in_array($selectedTable, $tableArray)):
+            $_SESSION["database_message"] = "Selected table does not exist!";
+            $_SESSION["database_message_type"] = "error";
+            $isValidationError = true;
+        endif;
+
+        /* Check to see if the input for the selected table column is exist */
+        if(!in_array($selectedTableColumn, $columnArray[$selectedTable])):
+            $_SESSION["database_message"] = "Selected column does not exist!";
+            $_SESSION["database_message_type"] = "error";
+            $isValidationError = true;
+        endif;
+        
+        /* Execute SQL query when there is no error */
+        if(!$isValidationError)
+        {
+            mysqli_query($con, "ALTER TABLE $selectedTable DROP COLUMN $selectedTableColumn") 
+                or die("Error on $selectedTable query: ALTER TABLE Customers DROP COLUMN ContactName | " . mysqli_error($con));
+                
+            $_SESSION["database_message"] = "The selected column has been deleted!";
+            $_SESSION["database_message_type"] = "success";
+
+            header("Location: ./admin.php?redirect");
+            exit();
+        }
     }
 }
 ?>
@@ -93,6 +227,17 @@ if(isset($_POST["invoke_alter"]))
 			<div class="ui text loader"><i class="fa fa-exclamation-triangle"></i>&emsp;Error: Please enable JavaScript...</div>
 		</div>
 
+        <!-- Database Message -->
+        <?php if(isset($_SESSION['database_message'])): ?>
+            <div class="ui <?php echo $_SESSION['database_message_type'] ?> no-margin message">
+                <i class="close icon"></i>
+                <div class="header">
+                    <?php echo (strcasecmp($_SESSION["database_message_type"], "negative") == 0) ? "Error" : ucwords($_SESSION["database_message_type"]) ?>
+                </div>
+                <p><?php echo $_SESSION['database_message'] ?></p>
+            </div>
+        <?php endif; ?>
+
         <!-- Navigation Menu -->
 		<div class="ui container">
             <div class="ui borderless stackable no-bottom-border-radius no-margin inverted menu">
@@ -117,65 +262,77 @@ if(isset($_POST["invoke_alter"]))
                     </div>
                 </div>	
             </div>
-		</div>
-	
-		<div class="ui hidden divider"></div>
+        </div>
 
-        <!-- Adding Column Form -->
+        <div class="ui hidden divider"></div>
+        
+        <!-- Structure Manipulation Create/Delete -->
+        <div class="ui container">
+            <div class="ui inverted teal segment no-bottom-border-radius">
+                <div class="ui huge center aligned header">
+                    <i class="fa fa-server"></i>&emsp;Structure Manipulation
+                </div>
+            </div>
+        </div>
+        <div class="ui container">
+            <div class="ui inverted form">
+                <div class="ui inverted blue segment no-top-border-radius">
+                    <div class="field">
+                        <label>What would you like to do?</label>
+                        <select id="form-structure-toggler" class="ui dropdown" name="form_structure">
+                            <option value="" disabled selected>Please Choose...</option>
+                            <option value="create_column">Create Column</option>
+                            <option value="delete_column">Delete Column</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui hidden divider"></div>
+
+        <!-- Structure Manipulation -->
         <div class="ui container">
             <div class="ui centered grid">
                 <div class="column">
-                    <div class="ui inverted teal segment">
-                        <div class="ui huge center aligned header">
-                            <i class="fa fa-server"></i>&emsp;Structure Manipulation
-                        </div>
-                    </div>
-
-                    <!-- Structure Manipulation -->
-                    <form action="./admin.php" method="POST">
+                    <!-- Add Column Form -->
+                    <form id="form-structure-create" action="./admin.php" method="POST">
                         <div class="ui equal width form">
                             <div class="ui segment">
-                                <!-- Database Message -->
-                                <?php if(isset($_SESSION['database_message'])): ?>
-                                <div class="ui <?php echo $_SESSION['database_message_type']; ?> message">
-                                    <i class="close icon"></i>
-                                    <div class="header">
-				                        <?php echo ucwords($_SESSION["database_message_type"]); ?>
-			                        </div>
-                                    <p><?php echo $_SESSION['database_message']; ?></p>
-                                </div>
-                                <?php endif; ?>
-
-                                <!-- Structure Manipulation: Database Table -->
+                                <!-- Add Column Form: Database Table -->
                                 <div class="required field">
                                     <label>Database Table</label>
-                                    <select class="ui dropdown" name="database_table">
+                                    <select class="ui dropdown" id="database-table-add" name="database_table">
                                         <option value="" disabled selected>Please Choose...</option>
-                                        <?php
-                                            $table = mysqli_query($con, "SHOW TABLES ");
-                                            while($result = mysqli_fetch_array($table))
-                                            {
-                                                $tableArray[] = $result["0"];
-                                                $tablenameArray[] = ucwords(str_replace("_", " ", $result["0"]));
-                                            }
-                                        ?>
                                         <?php for($i = 0; $i < count($tableArray); $i++): ?>
                                             <option value="<?php echo $tableArray[$i] ?>"><?php echo $tablenameArray[$i] ?></option>
                                         <?php endfor; ?>
                                     </select>
                                 </div>
 
-                                <!-- Structure Manipulation: Column Name -->
+                                <!-- Add Column Form: Preview Existing Column-->
+                                <?php for($i = 0; $i < count($tableArray); $i++): ?>
+                                <div class="field" id="structure-current-<?php echo $tableArray[$i] ?>">
+                                    <label>Current <?php echo ucwords(str_replace("_", " ", $tableArray[$i])) ?> Column</label>
+                                    <?php for($j = 0; $j < count($tableColumnArray[$i]); $j++): ?>
+                                        <div class="ui teal label cushioned">
+                                            <?php echo ucwords(str_replace("_", " ", $tableColumnArray[$i][$j])) ?>
+                                        </div>
+                                    <?php endfor; ?>
+                                </div>
+                                <?php endfor; ?>
+
+                                <!-- Add Column Form: Column Name -->
                                 <div class="required field">
                                     <label>Column Name</label>
                                     <input type="text" name="column_name" placeholder="Column Name">
                                 </div>
 
-                                <!-- Structure Manipulation: Column Type and Length -->
+                                <!-- Add Column Form: Column Type and Length -->
                                 <div class="equal width fields">
                                     <div class="required field">
                                         <label>Column Type</label>
-                                        <select class="ui dropdown" name="column_type">
+                                        <select class="ui dropdown" id="column-type" name="column_type">
                                             <option value="" disabled selected>Please Choose...</option>
                                             <option value="int">INT</option>
                                             <option value="varchar">VARCHAR</option>
@@ -183,29 +340,29 @@ if(isset($_POST["invoke_alter"]))
                                             <option value="date">DATE</option>
                                         </select>
                                     </div>
-                                    <div class="required field">
+                                    <div class="required field" id="column-type-length">
                                         <label>Column Type Length</label>
                                         <input type="text" name="column_type_length" placeholder="Column Type Length">
                                     </div>
                                 </div>
 
-                                <!-- Structure Manipulation: Column Default -->
+                                <!-- Add Column Form: Column Default -->
                                 <div class="equal width fields">
                                     <div class="field">
                                         <label>Column Default</label>
-                                        <select class="ui dropdown" id="as-defined" name="column_default">
+                                        <select class="ui dropdown" id="column-default" name="column_default">
                                             <option value="">None</option>
                                             <option value="as defined">As Defined</option>
                                             <option value="curent_timestamp">CURRENT_TIMESTAMP</option>
                                         </select>
                                     </div>
-                                    <div class="required field" id="as-defined-value">
+                                    <div class="required field" id="column-default-value">
                                         <label>As Defined Value</label>
                                         <input type="text" name="column_as_defined_value" placeholder="Column As Defined Value">
                                     </div>
                                 </div>
 
-                                <!-- Structure Manipulation: Null -->
+                                <!-- Add Column Form: Null -->
                                 <div class="field">
                                     <div class="ui toggle checkbox">
                                         <input type="checkbox" name="column_null" value="null">
@@ -213,22 +370,60 @@ if(isset($_POST["invoke_alter"]))
                                     </div>
                                 </div>
 
-                                <!-- Structure Manipulation: Attributes -->
+                                <!-- Add Column Form: Attributes -->
                                 <div class="field">
                                     <label>Column Attributes</label>
                                     <select class="ui dropdown" name="column_attributes">
                                         <option value=""></option>
-                                        <option value="BINARY">BINARY</option>
-                                        <option value="UNSIGNED">UNSIGNED</option>
-                                        <option value="UNSIGNED ZEROFILL">UNSIGNED ZEROFILL</option>
-                                        <option value="on update CURRENT_TIMESTAMP">on update CURRENT_TIMESTAMP</option>
+                                        <option value="binary">BINARY</option>
+                                        <option value="unsigned">UNSIGNED</option>
+                                        <option value="unsigned zerofill">UNSIGNED ZEROFILL</option>
+                                        <option value="on update current_timestamp">on update CURRENT_TIMESTAMP</option>
                                     </select>
                                 </div>
 
-                                <!-- Create Button -->
+                                <!-- Add Column Form: Create Button -->
                                 <div class="field">
-                                    <button class="fluid ui blue button" type="submit" name="invoke_alter">
+                                    <button class="fluid ui blue button" type="submit" name="invoke_alter_add">
                                         <i class="fa fa-plus"></i>&emsp;Create
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Drop Column Form -->
+                    <form id="form-structure-delete" action="./admin.php" method="POST">
+                        <div class="ui equal width form">
+                            <div class="ui segment">
+                                <!-- Drop Column Form: Database Table -->
+                                <div class="required field">
+                                    <label>Database Table</label>
+                                    <select class="ui dropdown" id="database-table-drop" name="database_table">
+                                        <option value="" disabled selected>Please Choose...</option>
+                                        <?php for($i = 0; $i < count($tableArray); $i++): ?>
+                                            <option value="<?php echo $tableArray[$i] ?>"><?php echo $tablenameArray[$i] ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                                
+                                <!-- Drop Column Form: Database Table Column-->
+                                <?php for($i = 0; $i < count($tableArray); $i++): ?>
+                                <div class="required field" id="structure-delete-<?php echo $tableArray[$i] ?>">
+                                    <label><?php echo ucwords(str_replace("_", " ", $tableArray[$i])) ?> Column</label>
+                                    <select class="ui dropdown" name="database_table_column">
+                                        <option value="" disabled selected>Please Choose...</option>
+                                        <?php for($j = 0; $j < count($tableColumnArray[$i]); $j++): ?>
+                                            <option value="<?php echo $tableColumnArray[$i][$j] ?>"><?php echo ucwords(str_replace("_", " ", $tableColumnArray[$i][$j])) ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                                <?php endfor; ?>
+
+                                <!-- Drop Column Form: Delete Button -->
+                                <div class="field">
+                                    <button class="fluid ui red button" type="submit" name="invoke_alter_drop">
+                                        <i class="fa fa-minus"></i>&emsp;Delete
                                     </button>
                                 </div>
                             </div>

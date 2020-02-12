@@ -3,39 +3,36 @@
 /* Start Session */
 session_start();
 
-
 /* Database connection */
 $con = (require_once "./php/connection.php");
-
 
 /* Menu Number and Column Number */
 $mn = intval(filter_input(INPUT_GET, "mn"));
 $cn = intval(filter_input(INPUT_GET, "cn"));
 
-
 /* Store table names in an array */
 /* Make table headers */
 //Iterate through the rows of the result table and sorted it by descending order
-$table = mysqli_query($con, "SHOW TABLES ");
-while($result = mysqli_fetch_array($table))
+$tables = mysqli_query($con, "SHOW TABLES ");
+while($result = mysqli_fetch_array($tables))
 {
     $tableArray[] = $result["0"];
     $headerArray[] = ucwords(str_replace("_", " ", $result["0"]));
 }
+unset($result);
 rsort($tableArray);
 rsort($headerArray);
 $table_name = $tableArray[$mn];
 
-
 /* Retrieve all the columns for the current table */
 //Iterate through the rows of the result table
-$column = mysqli_query($con, "SHOW COLUMNS FROM $table_name");
-while($result = mysqli_fetch_array($column))
+$columns = mysqli_query($con, "SHOW COLUMNS FROM $table_name");
+while($result = mysqli_fetch_array($columns))
 {
 	$displayFields[] = ucwords(str_replace("_", " ", $result["0"]));
 	$fields[] = $result["0"];
 }
-
+unset($result);
 
 /* Sorting based on the selected column and by keyword search (if any)
  * NOTE: For descending order, use the keyword DESC. */
@@ -70,17 +67,16 @@ else
 	}
 }
 
-
 /* Getting column data */
 $isDataEmpty = false;
 if(mysqli_num_rows($sortedResult) > 0)
 {
     while($line = mysqli_fetch_array($sortedResult, MYSQLI_ASSOC))
     {
-        $i = 0;
+		$i = 0;
         foreach($line as $col_value)
         {
-            $data2dArr[$i][] = $col_value;  //ROW x COLUMN
+            $data2dArr[$i][] = (is_null($col_value)) ? "NULL" : $col_value;  //ROW x COLUMN
             $i++;
         }
     }
@@ -131,9 +127,9 @@ else
 		<div class="ui <?php echo $_SESSION["database_message_type"]; ?> no-margin message">
 			<i class="close icon"></i>
 			<div class="header">
-				<?php echo ucwords($_SESSION["database_message_type"]); ?>
+				<?php echo (strcasecmp($_SESSION["database_message_type"], "negative") == 0) ? "Error" : ucwords($_SESSION["database_message_type"]) ?>
 			</div>
-			<p><?php echo $_SESSION["database_message"]; ?></p>
+			<p><?php echo $_SESSION["database_message"] ?></p>
 		</div>
 		<?php endif; ?>
 	
@@ -172,9 +168,9 @@ else
 			<div class="ui borderless stackable no-top-border-radius no-margin inverted pointing teal menu">
     			<?php for($i = 0; $i < count($headerArray); $i++): ?>
                     <?php if($mn == $i): ?>
-                        <a class="active item"><?php echo $headerArray[$i]; ?></a>
+                        <a class="active item"><?php echo $headerArray[$i] ?></a>
                     <?php else: ?>
-                        <a class="item" href="index.php?mn=<?php echo $i; ?>"><?php echo $headerArray[$i]; ?></a>
+                        <a class="item" href="index.php?mn=<?php echo $i ?>"><?php echo $headerArray[$i] ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
 			</div>
@@ -191,7 +187,7 @@ else
 					<tr class="center aligned">
 						<?php for($i = 0; $i < count($displayFields); $i++): ?>
                         	<th>
-                        		<strong><?php echo $displayFields[$i]; ?></strong>&emsp;
+                        		<strong><?php echo $displayFields[$i] ?></strong>&emsp;
                     		</th>
                         <?php endfor; ?>
                         <th></th>
@@ -201,10 +197,10 @@ else
 						<?php for($i = 0; $i < count($displayFields); $i++): ?>
                         	<th>
                         		<div class="ui buttons">
-                            		<button class="ui compact teal icon button" onclick="sortCurrentField(1, <?php echo $mn; ?>, <?php echo $i; ?>)">
+                            		<button class="ui compact teal icon button" onclick="sortCurrentField(1, <?php echo $mn ?>, <?php echo $i ?>)">
                                     	<i class="fa fa-sort-amount-asc"></i>
                                     </button>
-                                    <button class="ui compact teal icon button" onclick="sortCurrentField(-1, <?php echo $mn; ?>, <?php echo $i; ?>)">
+                                    <button class="ui compact teal icon button" onclick="sortCurrentField(-1, <?php echo $mn ?>, <?php echo $i ?>)">
                                     	<i class="fa fa-sort-amount-desc"></i>
                                     </button>
                         		</div>
@@ -223,11 +219,11 @@ else
 					    	<tr class="center aligned">
 					        <?php for($k = 0; $k < count($fields); $k++): ?>
                             	<td>
-                        			<?php echo $data2dArr[$k][$j]; ?>
+                        			<?php echo $data2dArr[$k][$j] ?>
                             	</td>
                             <?php endfor; ?>
                                 <td>
-                                	<?php if(isset($_SESSION["row-edit"]) && $_SESSION["row-edit"] == $j):?>
+                                	<?php if(isset($_SESSION["row-edit"]) && $_SESSION["row-edit"] == $j): ?>
                                 	<!-- Display Data: Editing notice -->
                                 	<div class="ui disabled compact inverted yellow button">
                                         <i class="fa fa-cogs"></i>&emsp;Editing...
@@ -240,10 +236,10 @@ else
 										</button>
 										<?php else: ?>
 										<div class="ui buttons">
-											<button class="ui compact green button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn; ?>&cn=<?php echo $cn?><?php if(isset($_GET['desc'])): echo '&desc'; endif; ?>&edit=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)); ?>&row-edit=<?php echo $j?>';">
+											<button class="ui compact green button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn ?>&cn=<?php echo $cn?><?php if(isset($_GET['desc'])): echo '&desc'; endif; ?>&edit=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)) ?>&row-edit=<?php echo $j ?>';">
 												<i class="fa fa-pencil-square-o"></i>
 											</button>
-											<button class="ui compact red button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn; ?>&cn=<?php echo $cn?>&delete=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)); ?>';">
+											<button class="ui compact red button" onclick="window.location.href = './php/process.php?mn=<?php echo $mn ?>&cn=<?php echo $cn?>&delete=<?php echo implode(',', array_map(function($e) use($j) { return $e[$j]; }, $data2dArr)) ?>';">
 												<i class="fa fa-trash"></i>
 											</button>
 										</div>
@@ -270,9 +266,9 @@ else
 		<div class="ui hidden divider"></div>
 	
 		<!-- Update/Create a row -->
-		<div id="editor-toggle" class="ui container">
+		<div id="editor-toggler" class="ui container">
 			<div class="ui right aligned inverted teal segment">
-				<button class="ui compact blue button" type="submit" name="create">
+				<button id="editor-toggler-button" class="ui compact blue button" type="submit" name="create">
                 	<i class="fa fa-wrench"></i>&emsp;New Row
                 </button>
 			</div>
@@ -292,8 +288,8 @@ else
     						<!-- Update/Create a row: Input field -->
                         	<td>
                         		<div class="ui mini input">
-                        			<input type="text" name="<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>" placeholder="<?php echo ucwords(str_replace("_", " ", $fields[$i])); ?>">
-                                    <input type="hidden" name="old_<?php echo $fields[$i]; ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>">
+                        			<input type="text" name="<?php echo $fields[$i] ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>" placeholder="<?php echo ucwords(str_replace("_", " ", $fields[$i])) ?>">
+                                    <input type="hidden" name="old_<?php echo $fields[$i] ?>" value="<?php if(isset($_SESSION["data_output"])): echo $dataOutput[$i]; endif; ?>">
                     			</div>
                     		</td>
                         <?php endfor; ?>

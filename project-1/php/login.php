@@ -8,6 +8,7 @@ session_start();
 if(isset($_SESSION["user_id"]))
 {
     header("Location: ./admin.php");
+    exit();
 }
 
 
@@ -38,6 +39,7 @@ if(isset($_POST["login"]))
         if(isset($_SESSION["user_id"]))
         {
             header("Location: ./admin.php");
+            exit();
         }
     }
 }
@@ -128,7 +130,7 @@ if(isset($_POST["login"]))
                                 <div class="ui <?php echo $_SESSION["database_message_type"]; ?> no-margin message">
                                     <i class="close icon"></i>
                                     <div class="header">
-				                        <?php echo ucwords($_SESSION["database_message_type"]); ?>
+				                        <?php echo (strcasecmp($_SESSION["database_message_type"], "negative") == 0) ? "Error" : ucwords($_SESSION["database_message_type"]) ?>
 			                        </div>
                                     <p><?php echo $_SESSION["database_message"]; ?></p>
                                 </div>
