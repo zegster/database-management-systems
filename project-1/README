@@ -1,0 +1,73 @@
+# Project 1 - Manage Data in University Database
+
+DESCRIPTION
+----------------------------------------------------------------------------------------------------
+First, I will use the following university database (link to the university database) to help you with 
+this project assignment. In this programming project, we will practice several basic features both in 
+SQL and web programming.
+
+We will practice the following features in this project:
+	A. SQL Features
+		1. Basic Select statements
+		2. Insert new data into the tables.
+		3. Update old data in the tables based on the row numbers.
+		4. Delete records from the tables based on the row numbers.
+		5. Find the primary key of the current table through information_schema.
+		
+	B. Web Programming Features
+		1. Use Bootstrap (Glyphicons) on the buttons.
+		2. Use CSS to adjust the styles of GUI components.
+		3. Pass data through hidden parameters.
+		4. Invoke PHP programs from JavaScript functions.
+		5. Change GUI components using JavaScript functions.
+		6. Send data to the server through HTML forms or parameters.
+		7. Use a uniformed way to access data in different tables
+		8. Use a single file for all tables. For instance index.php is used to dispaly all tables.
+
+
+REQUIREMENTS
+----------------------------------------------------------------------------------------------------
+Database
+	- We will use the university database. In this database, there are 5 tables: course, grade_report, 
+		section, prerequisite, and student. From the SQL script, you can see that three tables have a 
+		primary key: course, section, and student. The remaining two tables do not have any primary key. 
+		How do we identify the records in them?
+	- Note: We cannot modify the tables.
+	
+Enter data
+	- We need to insert new records into each table through a simple User Interface.
+
+Switch tables
+	- Click the hyperlink of a table to switch to it, then you can enter data in this table through a 
+		similar interface.
+	
+Data validation not required
+	- In order to make our first project as simple as possible, we assume that all the data entered is 
+		valid. We will leave the data validation part to our second project.
+		
+Sort the tables based on the selected column
+	- You can use the arrow buttons at the bottom of each column to sort the data.
+
+Edit a row in any table
+	- When you click the Edit button associated with each row, you can see that the old values are 
+		displayed at the bottom of the table.
+
+Delete a row in any table
+	- When you click the Delete button associated with each row, you delete the row immediately.
+	
+[BONUS]
+	- Build an admin interface that allows changes in the table structure. For instance, if we would 
+		like to edit table STUDENT to include a dependant contact number. Make sure that you can also 
+		insert values to all entries if necessary. If you have questions, regarding the requirements 
+		for this bonus, do not hesitate to contact me.
+	- Note: added a keyword-based search feature. Searching functionality will search all the content
+		of the selected table.
+	
+
+HOW TO RUN
+----------------------------------------------------------------------------------------------------
+1. Enable Apache and MySQL in XAMPP Control Panel (v7.4.2 or above).
+2. Head to phpMyAdmin main page: http://localhost/phpmyadmin/index.php
+3. Click on SQL tab and run [init.sql] (file is in in db folder) by copy and paste into the text field and click on "Go".
+4. Now you can view the website in your browser (example URL: http://localhost/database-managment-systems/project-1/index.php)
+5. Make sure your browser have JavaScript enable.
