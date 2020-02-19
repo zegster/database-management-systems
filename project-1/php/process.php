@@ -37,15 +37,15 @@ if(isset($_POST["create"]))
     {
         $userInput[] = filter_input(INPUT_POST, $result["0"]);
     }
-    
+
     $query = "\"".implode( "\", \"", $userInput )."\"";
-    mysqli_query($con, "INSERT INTO $table_name 
-        VALUES($query)") 
+    mysqli_query($con, "INSERT INTO $table_name
+        VALUES($query)")
         or die("Error on $table_name query: INSERT INTO $table_name VALUES($query) | " . mysqli_error($con));
-    
+
     $_SESSION["database_message"] = "A new record has been added!";
     $_SESSION["database_message_type"] = "success";
-        
+
     header("Location: ../index.php?mn=" . $mn . "&cn=" . $cn);
     exit();
 }
@@ -60,16 +60,16 @@ elseif(isset($_GET["edit"]))
         $identifier[] = $result["0"];
     }
     unset($result);
-    
-    $value = explode(",", filter_input(INPUT_GET, "edit")); 
-    $query = implode(" AND ", array_map(function($e1, $e2){ 
+
+    $value = explode(",", filter_input(INPUT_GET, "edit"));
+    $query = implode(" AND ", array_map(function($e1, $e2){
         if(strcasecmp($e2, "null") == 0):
-            return $e1 . " is NULL"; 
+            return $e1 . " is NULL";
         else:
-            return $e1 . "=\"" . $e2 ."\""; 
+            return $e1 . "=\"" . $e2 ."\"";
         endif;
     }, $identifier, $value));
-    
+
     $output = mysqli_query($con, "SELECT * FROM $table_name WHERE $query")
     or die("Error on $table_name query: SELECT * FROM $table_name WHERE $query | " . mysqli_error($con));
     $data2dArr = array();
@@ -82,16 +82,16 @@ elseif(isset($_GET["edit"]))
             $i++;
         }
     }
-    
+
     $_SESSION["is_edit"] = true;
-    $_SESSION["row-edit"] = intval(filter_input(INPUT_GET, "row-edit")); 
+    $_SESSION["row-edit"] = intval(filter_input(INPUT_GET, "row-edit"));
     $_SESSION["data_output"] = implode(",", array_map(function($e){ return $e[0]; }, $data2dArr));
 
     if(isset($_GET["desc"]))
     {
         header("Location: ../index.php?mn=" . $mn . "&cn=" . $cn . "&desc#editor");
     }
-    else 
+    else
     {
         header("Location: ../index.php?mn=" . $mn . "&cn=" . $cn . "#editor");
     }
@@ -110,16 +110,16 @@ elseif(isset($_POST["update"]))
         $identifier[] = $result["0"];
     }
     unset($result);
-    
+
     $queryA = implode(", ", array_map(function($e1, $e2){ return $e1 . "=\"" . $e2 ."\""; }, $identifier, $userInput));
     $queryB = implode(" AND ", array_map(function($e1, $e2){ return $e1 . "=\"" . $e2 ."\""; }, $identifier, $oldData));
-    
+
     mysqli_query($con, "UPDATE $table_name SET $queryA WHERE $queryB")
         or die("Error on $table_name query: UPDATE $table_name SET $queryA WHERE $queryB | " . mysqli_error($con));
-        
+
     $_SESSION["database_message"] = "The record has been updated!";
-    $_SESSION["database_message_type"] = "success";   
-    
+    $_SESSION["database_message_type"] = "success";
+
     header("Location: ../index.php?mn=" . $mn . "&cn=" . $cn);
     exit();
 }
@@ -128,26 +128,26 @@ elseif(isset($_POST["update"]))
 //Check to see if the delete button has been pressed.
 elseif(isset($_GET["delete"]))
 {
-    $value = explode(",", $_GET["delete"]); 
+    $value = explode(",", $_GET["delete"]);
     $columns = mysqli_query($con, "SHOW COLUMNS FROM $table_name");
     while($result = mysqli_fetch_array($columns))
     {
         $identifier[] = $result["0"];
     }
-    
+
     $query = implode(" AND ", array_map(function($e1, $e2){ return $e1 . "=\"" . $e2 ."\""; }, $identifier, $value));
     mysqli_query($con, "DELETE FROM $table_name WHERE $query")
         or die("Error on $table_name query: DELETE FROM $table_name WHERE $query | " . mysqli_error($con));
-    
+
     $_SESSION["database_message"] = "The record has been deleted!";
     $_SESSION["database_message_type"] = "success";
-    
+
     header("Location: ../index.php?mn=" . $mn . "&cn=" . $cn);
     exit();
 }
 
 /* Nothing to process... */
-else 
+else
 {
     header("Location: ../index.php?redirect");
     exit();
