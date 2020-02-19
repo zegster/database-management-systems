@@ -2,8 +2,8 @@
 
 DESCRIPTION
 ----------------------------------------------------------------------------------------------------
-First, I will use the following university database (link to the university database) to help you with 
-this project assignment. In this programming project, we will practice several basic features both in 
+First, I will use the following university database (link to the university database) to help you with
+this project assignment. In this programming project, we will practice several basic features both in
 SQL and web programming.
 
 We will practice the following features in this project:
@@ -13,7 +13,7 @@ We will practice the following features in this project:
 		3. Update old data in the tables based on the row numbers.
 		4. Delete records from the tables based on the row numbers.
 		5. Find the primary key of the current table through information_schema.
-		
+
 	B. Web Programming Features
 		1. Use Bootstrap (Glyphicons) on the buttons.
 		2. Use CSS to adjust the styles of GUI components.
@@ -28,41 +28,53 @@ We will practice the following features in this project:
 REQUIREMENTS
 ----------------------------------------------------------------------------------------------------
 Database
-	- We will use the university database. In this database, there are 5 tables: course, grade_report, 
-		section, prerequisite, and student. From the SQL script, you can see that three tables have a 
-		primary key: course, section, and student. The remaining two tables do not have any primary key. 
+	- We will use the university database. In this database, there are 5 tables: course, grade_report,
+		section, prerequisite, and student. From the SQL script, you can see that three tables have a
+		primary key: course, section, and student. The remaining two tables do not have any primary key.
 		How do we identify the records in them?
 	- Note: We cannot modify the tables.
-	
+
 Enter data
 	- We need to insert new records into each table through a simple User Interface.
 
 Switch tables
-	- Click the hyperlink of a table to switch to it, then you can enter data in this table through a 
+	- Click the hyperlink of a table to switch to it, then you can enter data in this table through a
 		similar interface.
-	
+
 Data validation not required
-	- In order to make our first project as simple as possible, we assume that all the data entered is 
+	- In order to make our first project as simple as possible, we assume that all the data entered is
 		valid. We will leave the data validation part to our second project.
-		
+
 Sort the tables based on the selected column
 	- You can use the arrow buttons at the bottom of each column to sort the data.
 
 Edit a row in any table
-	- When you click the Edit button associated with each row, you can see that the old values are 
+	- When you click the Edit button associated with each row, you can see that the old values are
 		displayed at the bottom of the table.
 
 Delete a row in any table
 	- When you click the Delete button associated with each row, you delete the row immediately.
-	
+
 [BONUS]
-	- Build an admin interface that allows changes in the table structure. For instance, if we would 
-		like to edit table STUDENT to include a dependant contact number. Make sure that you can also 
-		insert values to all entries if necessary. If you have questions, regarding the requirements 
+	- Build an admin interface that allows changes in the table structure. For instance, if we would
+		like to edit table STUDENT to include a dependant contact number. Make sure that you can also
+		insert values to all entries if necessary. If you have questions, regarding the requirements
 		for this bonus, do not hesitate to contact me.
-	- Note: added a keyword-based search feature. Searching functionality will search all the content
-		of the selected table.
-	
+	- Note: added a keyword-based search feature with the help of regular expression. Regular expressions
+		allow us to search for data matching even more complex criteria. Searching functionality will search
+		all the columns of the selected table and try to find the matching pattern. Note that you will
+		enter search mode when you are searching for something. You will not be able to edit or delete a row
+		when you are in the search mode. To get out of the search mode, select the refresh button on the top right.
+
+	- Example: SELECT * FROM `student` WHERE `name` REGEXP 'John';
+	- Explanation: searches for all the student name that have the word John in them. It does not matter
+		whether the "John" is at the beginning, middle or end of the name. As long as it is contained in the
+		name then it will be considered.
+
+	- Login Information for the Admin page
+		username: root
+		password: [BLANK]
+
 
 HOW TO RUN
 ----------------------------------------------------------------------------------------------------

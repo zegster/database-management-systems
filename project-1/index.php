@@ -53,7 +53,6 @@ if(isset($_POST["keyword_search"]))
     else
     {
         $sortedResult = mysqli_query($con, "SELECT * FROM $table_name WHERE $searchQuery ORDER BY $fields[$cn]");
-        echo "SELECT * FROM $table_name WHERE $searchQuery ORDER BY $fields[$cn] DESC";
     }
 }
 else
